@@ -32,6 +32,105 @@ const gatsbyRemarkPlugins = [
   },
 ]
 
+let plugins = [
+  'gatsby-plugin-react-helmet',
+  'gatsby-transformer-sharp',
+  'gatsby-plugin-sharp',
+  'gatsby-plugin-typescript',
+  'gatsby-image',
+  'gatsby-plugin-styled-components',
+  'gatsby-plugin-smoothscroll',
+  'gatsby-plugin-catch-links',
+  {
+    resolve: `gatsby-plugin-sitemap`,
+    options: {
+      sitemapSize: 5000,
+      excludes: [
+        // Remove these from sitemap for SEO purposes
+        `/dummy`,
+        `/intro/example`,
+      ],
+    },
+  },
+  {
+    resolve: 'gatsby-plugin-robots-txt',
+    options: {
+      policy: [
+        {
+          userAgent: '*',
+          allow: '/',
+        },
+      ],
+    },
+  },
+  // 'gatsby-plugin-offline', // it causes infinite loop issue with workbox
+  {
+    resolve: `gatsby-plugin-mdx`,
+    options: {
+      decks: [],
+      defaultLayouts: {
+        default: require.resolve('./src/layouts/articleLayout.tsx'),
+      },
+      extensions: ['.mdx', '.md'],
+      gatsbyRemarkPlugins,
+    },
+  },
+  {
+    resolve: 'gatsby-source-filesystem',
+    options: {
+      name: 'dataguide',
+      path: `${__dirname}/content`,
+      ignore: ['**/.tsx*'],
+    },
+  },
+  {
+    resolve: 'gatsby-source-filesystem',
+    options: {
+      name: 'images',
+      path: `${__dirname}/src/images`,
+    },
+  },
+  'gatsby-plugin-remove-trailing-slashes',
+  'gatsby-plugin-page-list',
+  {
+    resolve: 'gatsby-plugin-google-tagmanager',
+    options: {
+      id: 'GTM-KCGZPWB',
+
+      // Include GTM in development.
+      //
+      // Defaults to false meaning GTM will only be loaded in production.
+      includeInDevelopment: false,
+
+      // datalayer to be set before GTM is loaded
+      // should be an object or a function that is executed in the browser
+      //
+      // Defaults to null
+      defaultDataLayer: { website: 'dataguide' },
+    },
+  },
+]
+
+const algoliaPlugin = {
+  resolve: require.resolve('./plugins/gatsby-algolia-indexer'),
+  options: {
+    appId: process.env.GATSBY_ALGOLIA_APP_ID,
+    adminKey: process.env.GATSBY_ALGOLIA_ADMIN_API_KEY,
+    searchKey: process.env.GATSBY_ALGOLIA_SEARCH_KEY,
+    indexName: process.env.GATSBY_ALGOLIA_INDEX_NAME,
+    types: [`Mdx`],
+  },
+}
+
+if (process.env.INDEX_ALGOLIA === 'true') {
+  if (process.env.GATSBY_ALGOLIA_APP_ID) {
+    plugins = [...plugins, algoliaPlugin]
+  } else {
+    console.warn('INDEX_ALGOLIA === true, but GATSBY_ALGOLIA_APP_ID is undefined.')
+  }
+}
+
+
 module.exports = {
   pathPrefix: process.env.ADD_PREFIX === 'true' ? config.gatsby.pathPrefix : '/',
   siteMetadata: {
@@ -44,84 +143,7 @@ module.exports = {
     header: config.header,
     siteUrl: config.gatsby.siteUrl,
     footer: config.footer,
-    docsLocation: config.siteMetadata.docsLocation,
+    dataguideLocation: config.siteMetadata.dataguideLocation,
   },
-  plugins: [
-    'gatsby-plugin-react-helmet',
-    'gatsby-transformer-sharp',
-    'gatsby-plugin-sharp',
-    'gatsby-plugin-typescript',
-    'gatsby-image',
-    'gatsby-plugin-styled-components',
-    'gatsby-plugin-smoothscroll',
-    'gatsby-plugin-catch-links',
-    {
-      resolve: `gatsby-plugin-sitemap`,
-      options: {
-        sitemapSize: 5000,
-        excludes: [
-          // Remove these from sitemap for SEO purposes
-          `/dummy`,
-          `/intro/example`,
-        ],
-      },
-    },
-    {
-      resolve: 'gatsby-plugin-robots-txt',
-      options: {
-        policy: [
-          {
-            userAgent: '*',
-            allow: '/',
-          },
-        ],
-      },
-    },
-    // 'gatsby-plugin-offline', // it causes infinite loop issue with workbox
-    {
-      resolve: `gatsby-plugin-mdx`,
-      options: {
-        decks: [],
-        defaultLayouts: {
-          default: require.resolve('./src/layouts/articleLayout.tsx'),
-        },
-        extensions: ['.mdx', '.md'],
-        gatsbyRemarkPlugins,
-      },
-    },
-    {
-      resolve: 'gatsby-source-filesystem',
-      options: {
-        name: 'docs',
-        path: `${__dirname}/content`,
-        ignore: ['**/.tsx*'],
-      },
-    },
-    {
-      resolve: 'gatsby-source-filesystem',
-      options: {
-        name: 'images',
-        path: `${__dirname}/src/images`,
-      },
-    },
-    'gatsby-plugin-remove-trailing-slashes',
-    'gatsby-plugin-page-list',
-    {
-      resolve: 'gatsby-plugin-google-tagmanager',
-      options: {
-        id: 'GTM-KCGZPWB',
-
-        // Include GTM in development.
-        //
-        // Defaults to false meaning GTM will only be loaded in production.
-        includeInDevelopment: false,
-
-        // datalayer to be set before GTM is loaded
-        // should be an object or a function that is executed in the browser
-        //
-        // Defaults to null
-        defaultDataLayer: { website: 'dataguide' },
-      },
-    },
-  ],
+  plugins
 }
